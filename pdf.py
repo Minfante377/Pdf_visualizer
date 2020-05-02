@@ -20,7 +20,7 @@ import traceback
 
 from PyQt5.QtWidgets import QWidget, QApplication, QShortcut, \
      QLabel, QScrollArea, QSizePolicy, QVBoxLayout
-from PyQt5.QtGui import QPainter, QColor, QFont, QPixmap
+from PyQt5.QtGui import QPainter, QColor, QFont, QPixmap, qRgb, qGray
 from PyQt5.QtCore import Qt, QPoint, QSize, QUrl, QByteArray
 from PyQt5.QtNetwork import QNetworkAccessManager, \
      QNetworkReply, QNetworkRequest
@@ -117,11 +117,9 @@ class PDFWidget(QLabel):
         print("Rendering...")
         if not self.document:
             return
+        if self.dark_mode:
+            self.document.setPaperColor(QColor(30,30,30)) 
         print(self.dark_mode)
-        if self.dark_mode == True:
-            self.document.setPaperColor(QColor(75,75,75))
-        else:
-            self.document.setPaperColor(QColor(255,255,255))
         if not self.page:
             self.page = self.document.page(self.pageno)
             self.pagesize = self.page.pageSize()
@@ -157,6 +155,8 @@ class PDFWidget(QLabel):
 
         img = self.page.renderToImage(self.dpi, self.dpi)
         self.pixmap = QPixmap.fromImage(img)
+        if self.dark_mode:
+            self.pixmap = self.invert()
         self.setPixmap(self.pixmap)
 
     def start_load(self, url):
@@ -185,6 +185,24 @@ class PDFWidget(QLabel):
     
     def toogle(self):
         self.dark_mode = not(self.dark_mode)
+    
+    def invert(self):
+        
+        image = self.pixmap.toImage()
+        w = self.pixmap.width()
+        h = self.pixmap.height()
+        i = 0
+        j = 0
+        for i in range(w):
+            for j in range(h):
+                col = image.pixel(i,j)
+                c = QColor(col).getRgb()
+                prom = (c[1] + c[2] + c[0]) / 3
+                if not prom == 30:
+                    gray = qGray(col)
+                    image.setPixel(i,j,qRgb(100, 100, 100))
+        print(col)
+        return QPixmap.fromImage(image)
 
 class PDFScrolledWidget(QScrollArea):
 
