@@ -20,14 +20,17 @@ class App(QApplication):
         previous_button.clicked.connect(self.previous_page)
         next_button = QPushButton('Next')
         next_button.clicked.connect(self.next_page)
-        self.file = None
         desktops = QApplication.desktop()
+        self.file = None
         self.geometry = desktops.screenGeometry(desktops.screenNumber())
         self.pdf_visualizer = PDFWidget(self.file, geometry = self.geometry)
         self.page_number = 0
+        dark_button = QPushButton('Dark Mode')
+        dark_button.clicked.connect(self.toogle)
         buttons_layout.addWidget(browse_button)
         buttons_layout.addWidget(previous_button)
         buttons_layout.addWidget(next_button)
+        buttons_layout.addWidget(dark_button)
         layout.addLayout(buttons_layout)
         layout.addWidget(self.pdf_visualizer)
         self.main_window.setCentralWidget(QWidget(self.main_window))
@@ -43,13 +46,18 @@ class App(QApplication):
     
     def next_page(self,button):
         self.page_number = self.page_number + 1
-        self.pdf_visualizer.load_file(self.file, self.page_number)
+        self.pdf_visualizer.load_file(self.file,self.page_number)
     
     def previous_page(self,button):
         if self.page_number > 0:
             self.page_number = self.page_number - 1
-        self.pdf_visualizer.load_file(self.file, self.page_number)
+        self.pdf_visualizer.load_file(self.file,self.page_number)
     
+    def toogle(self,button):
+        self.pdf_visualizer.toogle()
+        self.pdf_visualizer.load_file(self.file, self.page_number)
+
+
 if __name__ == '__main__':
     app = App(sys.argv)
     sys.exit(app.exec_())

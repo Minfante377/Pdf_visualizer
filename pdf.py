@@ -53,6 +53,7 @@ class PDFWidget(QLabel):
         super().__init__(parent)
 
         self.geometry = geometry
+        self.dark_mode = False
 
         # Guess at initial size: will be overridden later.
         if geometry:
@@ -90,7 +91,7 @@ class PDFWidget(QLabel):
 
         self.render()
     
-    def load_file(self,file_name,number = 0):
+    def load_file(self,file_name ,number = 0):
         
         self.document = None
         self.start_load(file_name)
@@ -113,9 +114,14 @@ class PDFWidget(QLabel):
     def render(self):
         """Render to a pixmap at the current DPI setting.
         """
+        print("Rendering...")
         if not self.document:
             return
-
+        print(self.dark_mode)
+        if self.dark_mode == True:
+            self.document.setPaperColor(QColor(75,75,75))
+        else:
+            self.document.setPaperColor(QColor(255,255,255))
         if not self.page:
             self.page = self.document.page(self.pageno)
             self.pagesize = self.page.pageSize()
@@ -176,7 +182,9 @@ class PDFWidget(QLabel):
 
         if self.load_cb:
             self.load_cb()
-
+    
+    def toogle(self):
+        self.dark_mode = not(self.dark_mode)
 
 class PDFScrolledWidget(QScrollArea):
 
