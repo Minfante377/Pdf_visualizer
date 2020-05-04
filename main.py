@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QPushButton, QApplication, QFileDialog, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget
+from PyQt5.QtWidgets import QLineEdit, QLabel, QPushButton, QApplication, QFileDialog, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget
 from PyQt5 import QtCore
+from PyQt5.QtGui import QIntValidator
 from popplerqt5 import Poppler
 import sys
 from pdf import PDFWidget 
@@ -20,6 +21,16 @@ class App(QApplication):
         previous_button.clicked.connect(self.previous_page)
         next_button = QPushButton('Next')
         next_button.clicked.connect(self.next_page)
+        self.total_label = QLabel()
+        self.total_label.setText("/0")
+        self.input = QLineEdit()
+        self.input.setText("0")
+        self.input.setValidator(QIntValidator())
+        self.input.setAlignment(QtCore.Qt.AlignRight)
+        self.input.setFixedSize(50,35)
+        self.input.setFixedSize(50,35)
+        input_button = QPushButton('Go')
+        input_button.clicked.connect(self.go_to)
         desktops = QApplication.desktop()
         self.file = None
         self.geometry = desktops.screenGeometry(desktops.screenNumber())
@@ -32,6 +43,9 @@ class App(QApplication):
         buttons_layout.addWidget(previous_button)
         buttons_layout.addWidget(next_button)
         buttons_layout.addWidget(dark_button)
+        buttons_layout.addWidget(self.input)
+        buttons_layout.addWidget(self.total_label)
+        buttons_layout.addWidget(input_button)
         layout.addLayout(buttons_layout)
         layout.addWidget(self.pdf_visualizer)
         self.main_window.setCentralWidget(QWidget(self.main_window))
@@ -49,21 +63,32 @@ class App(QApplication):
 
     def next_page(self,button):
         self.num_pages = self.pdf_visualizer.get_count()
-        print(self.num_pages)
+        self.total_label.setText("/"+str(self.num_pages-1))
         if self.page_number > self.num_pages - 1:
             return
         self.page_number = self.page_number + 1
         self.pdf_visualizer.change_page(self.page_number)
+        self.input.setText(str(self.page_number))
     
     def previous_page(self,button):
         if self.page_number > 0:
             self.page_number = self.page_number - 1
         self.pdf_visualizer.change_page(self.page_number)
+        self.input.setText(str(self.page_number))
     
     def toogle(self,button):
         self.pdf_visualizer.toogle()
         self.pdf_visualizer.change_page(self.page_number)
-
+    
+    def go_to(self):
+        page = int(self.input.text())
+        self.total_label.setText("/"+str(self.num_pages-1))
+        if page > self.num_pages - 1 or page < 0:
+            self.input.setText(str(self.page_number))
+            return
+        self.pdf_visualizer.change_page(page)
+        self.input.setText(str(page))
+        self.page_number = page
 
 if __name__ == '__main__':
     app = App(sys.argv)
