@@ -25,6 +25,7 @@ class App(QApplication):
         self.geometry = desktops.screenGeometry(desktops.screenNumber())
         self.pdf_visualizer = PDFWidget(self.file, geometry = self.geometry)
         self.page_number = 0
+        self.num_pages = 1
         dark_button = QPushButton('Dark Mode')
         dark_button.clicked.connect(self.toogle)
         buttons_layout.addWidget(browse_button)
@@ -40,22 +41,28 @@ class App(QApplication):
     def browse(self, button):
         self.file, _ = QFileDialog.getOpenFileName(self.main_window, ' Single File', QtCore.QDir.rootPath(), '*.pdf')
         print(self.file)
-        if self.file:
+        if self.file: 
+            desktops = QApplication.desktop()
+            self.geometry = desktops.screenGeometry(desktops.screenNumber())
             self.page_number = 0
-            self.pdf_visualizer.load_file(self.file)
-    
+            self.pdf_visualizer.load_file(self.file, self.geometry)
+
     def next_page(self,button):
+        self.num_pages = self.pdf_visualizer.get_count()
+        print(self.num_pages)
+        if self.page_number > self.num_pages - 1:
+            return
         self.page_number = self.page_number + 1
-        self.pdf_visualizer.load_file(self.file,self.page_number)
+        self.pdf_visualizer.change_page(self.page_number)
     
     def previous_page(self,button):
         if self.page_number > 0:
             self.page_number = self.page_number - 1
-        self.pdf_visualizer.load_file(self.file,self.page_number)
+        self.pdf_visualizer.change_page(self.page_number)
     
     def toogle(self,button):
         self.pdf_visualizer.toogle()
-        self.pdf_visualizer.load_file(self.file, self.page_number)
+        self.pdf_visualizer.change_page(self.page_number)
 
 
 if __name__ == '__main__':

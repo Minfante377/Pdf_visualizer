@@ -54,6 +54,8 @@ class PDFWidget(QLabel):
 
         self.geometry = geometry
         self.dark_mode = False
+        self.num_pages = 0
+        self.paper_color = None
 
         # Guess at initial size: will be overridden later.
         if geometry:
@@ -88,15 +90,51 @@ class PDFWidget(QLabel):
         if pageno > 0:
             pageno -= 1
         self.pageno = pageno
-
         self.render()
     
-    def load_file(self,file_name ,number = 0):
+    def load_file(self,file_name,geometry ,document = None, load_cb = None,dpi = None, parent = None ,number = 0):
         
-        self.document = None
-        self.start_load(file_name)
+        self.paper_color = None
+        self.geometry = geometry
+        self.dark_mode = False
+        self.num_pages = 0
+        self.paper_color = None
+
+        # Guess at initial size: will be overridden later.
+        if geometry:
+            self.winwidth = geometry.height() * .75
+            self.winheight = geometry.height()
+        else:
+            self.geometry = PyQt5.QtCore.QSize(600, 800)
+            self.winwidth = 600
+            self.winheight = 800
+
+        self.filename = file_name
+
+        self.load_cb = load_cb
+
+        self.network_manager = None
+
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+        if not document:
+            self.document = None
+            if file_name:
+                self.start_load(file_name)
+        else:
+            self.document = document
         self.page = None
-        self.pagesize = QtCore.QSize(self.winwidth, self.winheight)
+        self.pagesize = QSize(self.winwidth, self.winheight)
+
+        self.dpi = dpi
+
+        # Poppler page numbering starts from 0 but that's not what
+        # most PDF users will expect, so subtract:
+        self.pageno = number
+        self.render()
+
+    def change_page(self,number):
+        self.page = None
         self.pageno = number
         self.render()
 
@@ -114,12 +152,16 @@ class PDFWidget(QLabel):
     def render(self):
         """Render to a pixmap at the current DPI setting.
         """
-        print("Rendering...")
+        print("Rendering...") 
         if not self.document:
             return
         if self.dark_mode:
-            self.document.setPaperColor(QColor(30,30,30)) 
-        print(self.dark_mode)
+            print(self.paper_color)
+            self.document.setPaperColor(QColor(30,30,30))
+        else:
+            if not self.paper_color == None:
+                self.document.setPaperColor(self.paper_color)
+            self.paper_color = self.document.paperColor()
         if not self.page:
             self.page = self.document.page(self.pageno)
             self.pagesize = self.page.pageSize()
@@ -181,6 +223,7 @@ class PDFWidget(QLabel):
         self.render()
 
         if self.load_cb:
+            self.num_pages = self.document.numPages()
             self.load_cb()
     
     def toogle(self):
@@ -203,6 +246,11 @@ class PDFWidget(QLabel):
                     image.setPixel(i,j,qRgb(100, 100, 100))
         print(col)
         return QPixmap.fromImage(image)
+    
+    def get_count(self):
+        if self.document:
+            self.num_pages = self.document.numPages()
+        return self.num_pages
 
 class PDFScrolledWidget(QScrollArea):
 
