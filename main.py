@@ -50,14 +50,15 @@ class App(QApplication):
         layout.addWidget(self.pdf_visualizer)
         self.main_window.setCentralWidget(QWidget(self.main_window))
         self.main_window.centralWidget().setLayout(layout)
+        self.main_window.resizeEvent = self.resize_page
         self.main_window.show()
 
     def browse(self, button):
         self.file, _ = QFileDialog.getOpenFileName(self.main_window, ' Single File', QtCore.QDir.rootPath(), '*.pdf')
         print(self.file)
         if self.file: 
-            desktops = QApplication.desktop()
-            self.geometry = desktops.screenGeometry(desktops.screenNumber())
+            self.geometry = self.main_window.geometry()
+            print(self.geometry.width())
             self.page_number = 0
             self.pdf_visualizer.load_file(self.file, self.geometry)
 
@@ -67,13 +68,15 @@ class App(QApplication):
         if self.page_number > self.num_pages - 1:
             return
         self.page_number = self.page_number + 1
-        self.pdf_visualizer.change_page(self.page_number)
+        self.geometry = self.main_window.frameGeometry()
+        self.pdf_visualizer.change_page(self.page_number, self.geometry)
         self.input.setText(str(self.page_number))
     
     def previous_page(self,button):
         if self.page_number > 0:
             self.page_number = self.page_number - 1
-        self.pdf_visualizer.change_page(self.page_number)
+        self.pdf_visualizer.change_page(self.page_number,self.geometry)
+        self.geometry = self.main_window.frameGeometry()
         self.input.setText(str(self.page_number))
     
     def toogle(self,button):
@@ -89,6 +92,11 @@ class App(QApplication):
         self.pdf_visualizer.change_page(page)
         self.input.setText(str(page))
         self.page_number = page
+    
+    def resize_page(self,window): 
+        self.geometry = self.main_window.frameGeometry()
+        self.pdf_visualizer.change_page(self.page_number, self.geometry)
+        print("Resizing")
 
 if __name__ == '__main__':
     app = App(sys.argv)

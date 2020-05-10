@@ -59,8 +59,8 @@ class PDFWidget(QLabel):
 
         # Guess at initial size: will be overridden later.
         if geometry:
-            self.winwidth = geometry.height() * .75
-            self.winheight = geometry.height()
+            self.winwidth = geometry.width() * .75
+            self.winheight = geometry.height() * .75
         else:
             self.geometry = PyQt5.QtCore.QSize(600, 800)
             self.winwidth = 600
@@ -72,7 +72,7 @@ class PDFWidget(QLabel):
 
         self.network_manager = None
 
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         if not document:
             self.document = None
@@ -102,8 +102,8 @@ class PDFWidget(QLabel):
 
         # Guess at initial size: will be overridden later.
         if geometry:
-            self.winwidth = geometry.height() * .75
-            self.winheight = geometry.height()
+            self.winwidth = geometry.width() * .75
+            self.winheight = geometry.height() * .75
         else:
             self.geometry = PyQt5.QtCore.QSize(600, 800)
             self.winwidth = 600
@@ -115,7 +115,7 @@ class PDFWidget(QLabel):
 
         self.network_manager = None
 
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         if not document:
             self.document = None
@@ -133,8 +133,16 @@ class PDFWidget(QLabel):
         self.pageno = number
         self.render()
 
-    def change_page(self,number):
+    def change_page(self,number,geometry = None, dpi = None):
+        
+        print(geometry)
+        if geometry:
+            self.winwidth = geometry.width()
+            self.winheight = geometry.height() * .75
+            self.geometry = geometry
         self.page = None
+        self.pagesize = QSize(self.winwidth, self.winheight)
+        self.dpi = dpi
         self.pageno = number
         self.render()
 
@@ -177,14 +185,15 @@ class PDFWidget(QLabel):
             # First assume that it's portrait aspect ratio and that
             # vertical size will be the limiting factor.
             self.dpi = POINTS_PER_INCH * \
-                self.geometry.height() / self.pagesize.height()
+                self.geometry.width() / self.pagesize.width()
 
             # Was that too much: will it overflow in width?
-            if self.pagesize.width() * self.dpi / POINTS_PER_INCH \
-               > self.geometry.width():
+            if self.pagesize.height() * self.dpi / POINTS_PER_INCH \
+               >  self.geometry.height():
                 self.dpi = POINTS_PER_INCH * \
-                    self.geometry.width() / self.pagesize.width()
-
+                    self.geometry.height() / self.pagesize.height()
+            while self.pagesize.height() * self.dpi / POINTS_PER_INCH > 0.9 * self.geometry.height():
+                    self.dpi = 0.99 * self.dpi
             self.winwidth = self.pagesize.width() * self.dpi / POINTS_PER_INCH
             self.winheight = self.pagesize.height() * self.dpi / POINTS_PER_INCH
 
